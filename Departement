@@ -108,6 +108,7 @@
         .status-in_progress { background: #E0E7FF; color: #3730A3; border: 1px solid #A5B4FC; }
         .status-evaluation_submitted { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
         .status-completed { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+        .status-pending_verification { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
 
         .btn-approve { background: rgba(34,197,94,0.15); color: #166534; border: 1px solid rgba(34,197,94,0.4); padding: 6px 16px; border-radius: 40px; font-size: 12px; cursor: pointer; margin-right: 8px; transition: all 0.2s; }
         .btn-approve:hover { background: rgba(34,197,94,0.3); }
@@ -176,7 +177,7 @@
         <h3><i class="fas fa-building mr-2" style="color:#ef4444;"></i>Company Details</h3>
         <div id="companyDetails" class="company-info-detail"></div>
         <div style="display:flex;gap:12px;">
-            <button id="verifyCompanyBtn" class="btn-approve" style="flex:1"><i class="fas fa-check mr-1"></i> Verify Company</button>
+            <button id="verifyCompanyBtn" class="btn-approve" style="flex:1"><i class="fas fa-check mr-1"></i> Accept</button>
             <button id="rejectCompanyBtn" class="btn-reject" style="flex:1"><i class="fas fa-times mr-1"></i> Reject</button>
             <button onclick="closeModal('companyModal')" class="btn-outline">Close</button>
         </div>
@@ -212,8 +213,8 @@
     let currentCompanyId = null;
     let currentContract = null;
     let currentFinalizeAppId = null;
+    let currentView = 'dashboard';
 
-    // Default sample data with status progression
     const defaultCompanies = [
         { id: 'c1', companyName: 'Tech Solutions DZ', email: 'tech@techsolutions.dz', registrationNumber: 'RC-12345', phone: '+213 555 111 222', sector: 'Software & AI', employeeCount: '50-100', address: 'Algiers, Algeria', website: 'www.techsolutions.dz', description: 'Leading software development company.', registeredDate: '2026-04-01', status: 'pending_verification' },
         { id: 'c2', companyName: 'Digital Innovators', email: 'info@digitalinnovators.dz', registrationNumber: 'RC-67890', phone: '+213 555 333 444', sector: 'Digital Marketing', employeeCount: '10-50', address: 'Oran, Algeria', website: 'www.digitalinnovators.dz', description: 'Digital marketing agency.', registeredDate: '2026-04-05', status: 'verified', verifiedDate: '2026-04-10' },
@@ -239,8 +240,8 @@
     function saveApplications(apps) { localStorage.setItem('applications', JSON.stringify(apps)); }
     function loadStudents() { return JSON.parse(localStorage.getItem('registeredStudents')) || defaultStudents; }
 
-    // ==================== RENDER FUNCTIONS ====================
     function renderView(view) {
+        currentView = view;
         const container = document.getElementById('mainContent');
         document.querySelectorAll('.menu-item').forEach(item => item.classList.toggle('active', item.dataset.view === view));
 
@@ -253,7 +254,6 @@
             default: renderDashboard(container);
         }
 
-        // Add Back to Dashboard button on all non-dashboard views
         if (view !== 'dashboard') {
             const viewContainer = container.querySelector('.view-container');
             if (viewContainer && !viewContainer.querySelector('.back-btn')) {
@@ -296,9 +296,16 @@
 
     function renderPendingCompaniesTable(pending) {
         if (!pending.length) return '<div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending company verifications</p></div>';
-        let html = '<table><thead><tr><th>Company</th><th>Email</th><th>Sector</th><th>Registered</th><th>Action</th></tr></thead><tbody>';
+        let html = '<table><thead><tr><th>Company</th><th>Email</th><th>Sector</th><th>Address</th><th>Registered</th><th>Action</th></tr></thead><tbody>';
         pending.forEach(c => {
-            html += `<tr><td><strong>${c.companyName}</strong><div class="company-detail">RC: ${c.registrationNumber || 'N/A'}</div></td><td>${c.email}</td><td>${c.sector || 'N/A'}</td><td>${new Date(c.registeredDate).toLocaleDateString()}</td><td><button class="btn-approve" onclick="viewCompanyDetails('${c.id}')"><i class="fas fa-eye mr-1"></i> Review</button></td></tr>`;
+            html += `<tr>
+                <td><strong>${c.companyName}</strong></td>
+                <td>${c.email}</td>
+                <td>${c.sector || 'N/A'}</td>
+                <td>${c.address || 'N/A'}</td>
+                <td>${new Date(c.registeredDate).toLocaleDateString()}</td>
+                <td><button class="btn-outline" onclick="viewCompanyDetails('${c.id}')"><i class="fas fa-eye mr-1"></i> Review</button></td>
+            </tr>`;
         });
         html += '</tbody></table>';
         return html;
@@ -349,9 +356,17 @@
 
     function renderFullPendingTable(pending) {
         if (!pending.length) return '<div class="empty-state"><i class="fas fa-check-circle"></i><p>No pending verifications</p></div>';
-        let html = '<table><thead><tr><th>Company</th><th>RC Number</th><th>Email</th><th>Phone</th><th>Sector</th><th>Employees</th><th>Registered</th><th>Action</th></tr></thead><tbody>';
+        let html = '<table><thead><tr><th>Company</th><th>Email</th><th>Phone</th><th>Address</th><th>Sector</th><th>Registered</th><th>Action</th></tr></thead><tbody>';
         pending.forEach(c => {
-            html += `<tr><td><strong>${c.companyName}</strong></td><td>${c.registrationNumber || 'N/A'}</td><td>${c.email}</td><td>${c.phone || 'N/A'}</td><td>${c.sector || 'N/A'}</td><td>${c.employeeCount || 'N/A'}</td><td>${new Date(c.registeredDate).toLocaleDateString()}</td><td><button class="btn-approve" onclick="viewCompanyDetails('${c.id}')"><i class="fas fa-eye mr-1"></i> Review</button></td></tr>`;
+            html += `<tr>
+                <td><strong>${c.companyName}</strong></td>
+                <td>${c.email}</td>
+                <td>${c.phone || 'N/A'}</td>
+                <td>${c.address || 'N/A'}</td>
+                <td>${c.sector || 'N/A'}</td>
+                <td>${new Date(c.registeredDate).toLocaleDateString()}</td>
+                <td><button class="btn-outline" onclick="viewCompanyDetails('${c.id}')"><i class="fas fa-eye mr-1"></i> Review</button></td>
+            </tr>`;
         });
         html += '</tbody></table>';
         return html;
@@ -373,7 +388,6 @@
         return html;
     }
 
-    // ==================== INTERNSHIP VALIDATIONS (TABBED) ====================
     function renderValidationsView(container) {
         const apps = loadApplications();
         const pending = apps.filter(a => a.status === 'pending');
@@ -389,7 +403,7 @@
                     <span style="color:#64748b;">${pending.length + evalReview.length} need attention</span>
                     <label class="btn-outline file-upload-label">
                         <i class="fas fa-upload"></i> Import from Excel
-                        <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleExcelImport(event)">
+                        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" onchange="handleExcelImport(event)">
                     </label>
                 </div>
             </div>
@@ -459,7 +473,7 @@
         return html;
     }
 
-    // ==================== VALIDATION ACTIONS ====================
+
     function approveInternship(appId) {
         let apps = loadApplications();
         const idx = apps.findIndex(a => a.id == appId);
@@ -556,10 +570,21 @@
         return html;
     }
 
-    // ==================== EXCEL IMPORT ====================
+    // ==================== EXCEL IMPORT (STRICT) ====================
     window.handleExcelImport = function(event) {
         const file = event.target.files[0];
         if (!file) return;
+
+        const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+        const fileName = file.name.toLowerCase();
+        const isValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+        
+        if (!isValidExtension) {
+            alert('❌ Invalid file type. Please select an Excel file (.xlsx, .xls) or CSV file (.csv) only.');
+            event.target.value = '';
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -568,31 +593,64 @@
                 const firstSheet = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheet];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                if (jsonData.length < 2) { alert('Excel file is empty.'); return; }
-                const headers = jsonData[0].map(h => h.toString().trim().toLowerCase());
-                const nameIdx = headers.indexOf('studentname');
-                const companyIdx = headers.indexOf('company');
-                const titleIdx = headers.indexOf('internshiptitle');
-                if (nameIdx === -1 || companyIdx === -1 || titleIdx === -1) { alert('Columns required: StudentName, Company, InternshipTitle'); return; }
+
+                if (jsonData.length < 2) {
+                    alert('⚠️ The Excel file is empty or has no data rows.');
+                    return;
+                }
+
+                const headers = jsonData[0].map(h => (h || '').toString().trim().toLowerCase());
+                
+                const nameIdx = headers.findIndex(h => h.includes('student') && h.includes('name'));
+                const companyIdx = headers.findIndex(h => h === 'company' || h.includes('company'));
+                const titleIdx = headers.findIndex(h => h.includes('internship') || h.includes('title') || h.includes('position'));
+
+                if (nameIdx === -1 || companyIdx === -1 || titleIdx === -1) {
+                    alert('❌ The Excel file must contain columns for: StudentName, Company, InternshipTitle.\n\nFound columns: ' + headers.join(', '));
+                    return;
+                }
+
                 const newApps = [];
+                let skippedCount = 0;
+
                 for (let i = 1; i < jsonData.length; i++) {
                     const row = jsonData[i];
-                    if (!row[nameIdx]) continue;
+                    if (!row || row.length === 0) { skippedCount++; continue; }
+                    
+                    const studentName = (row[nameIdx] || '').toString().trim();
+                    const company = (row[companyIdx] || '').toString().trim();
+                    const internshipTitle = (row[titleIdx] || '').toString().trim();
+
+                    if (!studentName || !company || !internshipTitle) { skippedCount++; continue; }
+                    
+                    const irrelevantKeywords = ['total', 'summary', 'notes', 'note', 'footer', 'page', 'date:', 'prepared by'];
+                    const combinedText = (studentName + company + internshipTitle).toLowerCase();
+                    if (irrelevantKeywords.some(kw => combinedText.includes(kw))) { skippedCount++; continue; }
+
+                    if (studentName.length < 3) { skippedCount++; continue; }
+
                     newApps.push({
-                        id: 'imp' + Date.now() + i,
-                        studentName: row[nameIdx].toString().trim(),
-                        company: row[companyIdx]?.toString().trim() || '',
-                        internshipTitle: row[titleIdx]?.toString().trim() || '',
-                        date: new Date().toISOString().slice(0,10),
+                        id: 'imp' + Date.now() + '_' + i,
+                        studentName: studentName,
+                        company: company,
+                        internshipTitle: internshipTitle,
+                        date: new Date().toISOString().slice(0, 10),
                         status: 'pending'
                     });
                 }
-                if (!newApps.length) { alert('No valid rows found.'); return; }
+
+                if (newApps.length === 0) {
+                    alert('⚠️ No valid internship data found in the file. ' + (skippedCount > 0 ? `(${skippedCount} rows skipped as irrelevant)` : '') + '\n\nMake sure your Excel has these columns:\n- StudentName\n- Company\n- InternshipTitle');
+                    return;
+                }
+
                 const existing = loadApplications();
                 saveApplications(existing.concat(newApps));
-                alert(`✅ Imported ${newApps.length} applications.`);
+                alert(`✅ Successfully imported ${newApps.length} internship application(s).` + (skippedCount > 0 ? `\n(${skippedCount} rows skipped as irrelevant)` : ''));
                 renderView('validations');
-            } catch (error) { alert('Error: ' + error.message); }
+            } catch (error) {
+                alert('❌ Error reading the file: ' + error.message + '\n\nMake sure it is a valid Excel or CSV file.');
+            }
         };
         reader.readAsArrayBuffer(file);
         event.target.value = '';
@@ -638,12 +696,14 @@
         const company = loadCompanies().find(c => c.id === companyId);
         if (company) {
             document.getElementById('companyDetails').innerHTML = `
-                <p><strong>${company.companyName}</strong></p>
-                <p>RC: ${company.registrationNumber || 'N/A'} | Email: ${company.email}</p>
-                <p>Phone: ${company.phone || 'N/A'} | Sector: ${company.sector || 'N/A'}</p>
-                <p>Employees: ${company.employeeCount || 'N/A'} | Address: ${company.address || 'N/A'}</p>
-                <p>Website: ${company.website || 'N/A'}</p>
-                <p>${company.description || ''}</p>
+                <p><strong>Company Name:</strong> ${company.companyName}</p>
+                <p><strong>Email:</strong> ${company.email}</p>
+                <p><strong>Phone:</strong> ${company.phone || 'Not provided'}</p>
+                <p><strong>Address:</strong> ${company.address || 'Not provided'}</p>
+                <p><strong>Sector:</strong> ${company.sector || 'Not provided'}</p>
+                <p><strong>Website:</strong> ${company.website || 'Not provided'}</p>
+                <p><strong>Description:</strong> ${company.description || 'No description provided.'}</p>
+                <p style="margin-top:12px; color:#4B5563; font-size:13px;">Registered on: ${new Date(company.registeredDate).toLocaleDateString()}</p>
             `;
             document.getElementById('companyModal').style.display = 'flex';
         }
@@ -653,7 +713,7 @@
         if (currentCompanyId) {
             let companies = loadCompanies();
             const idx = companies.findIndex(c => c.id === currentCompanyId);
-            if (idx !== -1) { companies[idx].status = 'verified'; companies[idx].verifiedDate = new Date().toISOString(); saveCompanies(companies); alert('Company verified.'); closeModal('companyModal'); renderView(currentView); }
+            if (idx !== -1) { companies[idx].status = 'verified'; companies[idx].verifiedDate = new Date().toISOString(); saveCompanies(companies); alert('✅ Company verified.'); closeModal('companyModal'); renderView(currentView); }
         }
     };
 
@@ -661,7 +721,7 @@
         if (currentCompanyId) {
             let companies = loadCompanies();
             const idx = companies.findIndex(c => c.id === currentCompanyId);
-            if (idx !== -1) { companies[idx].status = 'rejected'; saveCompanies(companies); alert('Company rejected.'); closeModal('companyModal'); renderView(currentView); }
+            if (idx !== -1) { companies[idx].status = 'rejected'; saveCompanies(companies); alert('❌ Company rejected.'); closeModal('companyModal'); renderView(currentView); }
         }
     };
 
@@ -679,14 +739,16 @@
         document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
         if (btn) btn.classList.add('active');
         document.querySelectorAll('.company-tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(`${tabName}CompaniesTab`).classList.add('active');
+        const target = document.getElementById(`${tabName}CompaniesTab`);
+        if (target) target.classList.add('active');
     };
 
     window.switchValidationTab = function(tabName, btn) {
         document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
         if (btn) btn.classList.add('active');
         document.querySelectorAll('.inner-tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(`${tabName}ValidTab`).classList.add('active');
+        const target = document.getElementById(`${tabName}ValidTab`);
+        if (target) target.classList.add('active');
     };
 
     document.querySelectorAll('.menu-item').forEach(item => {
@@ -699,7 +761,7 @@
     function goHome() { window.location.href = 'homepage.html'; }
     window.goHome = goHome;
 
-    // Expose functions that are called from inline onclick
+    // Expose functions for inline onclick
     window.approveInternship = approveInternship;
     window.rejectInternship = rejectInternship;
     window.openFinalizeModal = openFinalizeModal;
