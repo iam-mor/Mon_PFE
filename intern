@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intern Dashboard · Internship Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #EEF2F6 0%, #E6ECF3 40%, #F4F7FB 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #0F172A;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .blob {
+            position: fixed; width: 600px; height: 600px; border-radius: 50%; filter: blur(70px); opacity: 0.2;
+            pointer-events: none; animation: floatBlob 18s infinite ease-in-out; z-index: 0;
+        }
+        .blob-1 { background: radial-gradient(circle, rgba(56,163,253,0.5) 0%, rgba(56,163,253,0) 70%); top: -200px; right: -150px; }
+        .blob-2 { background: radial-gradient(circle, rgba(56,224,255,0.4) 0%, rgba(56,224,255,0) 70%); bottom: -200px; left: -150px; animation-delay: -9s; }
+
+        @keyframes floatBlob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 35px) scale(0.95); }
+        }
+
+        .header {
+            position: fixed; top: 20px; left: 20px; right: 20px; height: 70px;
+            background: rgba(244, 247, 251, 0.8); backdrop-filter: blur(14px); border-radius: 20px;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 28px;
+            z-index: 100; border: 1px solid rgba(56, 163, 253, 0.25);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            animation: pulseGlow 4s infinite ease-in-out;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-color: rgba(56,163,253,0.25); }
+            50% { box-shadow: 0 8px 30px rgba(56,163,253,0.35); border-color: rgba(56,163,253,0.5); }
+        }
+
+        .logo { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; }
+        .logo:hover { opacity: 0.85; }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #38A3FD, #1F7AD1); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .logo-icon i { color: white; font-size: 14px; }
+        .logo-text { font-size: 20px; font-weight: 700; color: #000000; }
+        .logo-badge { font-size: 12px; font-weight: 600; color: #38A3FD; background: rgba(56, 163, 253, 0.15); padding: 4px 10px; border-radius: 20px; margin-left: 4px; }
+
+        .header-right { display: flex; align-items: center; gap: 24px; }
+        .notification-container { position: relative; cursor: pointer; }
+        .notification-bell { background: rgba(56, 163, 253, 0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; transition: all 0.25s; color: #1F7AD1; border: 1px solid rgba(56, 163, 253, 0.3); }
+        .notification-bell:hover { background: rgba(56, 163, 253, 0.2); transform: scale(1.05); border-color: #38A3FD; }
+        .notification-badge { position: absolute; top: -6px; right: -6px; background: #EF4444; color: white; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 30px; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+        .notification-dropdown { position: absolute; top: 58px; right: 0; width: 360px; max-height: 420px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(16px); border-radius: 24px; border: 1px solid rgba(56, 163, 253, 0.3); box-shadow: 0 25px 40px -10px rgba(0,0,0,0.15); z-index: 200; display: none; overflow: hidden; }
+        .notification-dropdown.show { display: block; animation: slideDown 0.25s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+        .notification-header { padding: 18px 20px; border-bottom: 1px solid rgba(56,163,253,0.2); font-weight: 700; color: #0F172A; }
+        .notification-list { max-height: 320px; overflow-y: auto; }
+        .notification-item { padding: 14px 20px; border-bottom: 1px solid rgba(56,163,253,0.1); cursor: pointer; transition: background 0.2s; display: flex; gap: 14px; }
+        .notification-item:hover { background: rgba(56, 163, 253, 0.08); }
+        .notification-item.unread { background: rgba(56, 163, 253, 0.08); }
+        .notification-icon { font-size: 20px; }
+        .notification-content { flex: 1; }
+        .notification-title { color: #0F172A; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+        .notification-time { color: #64748b; font-size: 11px; }
+
+        .user-info { display: flex; align-items: center; gap: 18px; }
+        .user-name { color: #0F172A; font-size: 15px; font-weight: 500; }
+        .avatar { width: 44px; height: 44px; background: linear-gradient(135deg, #38A3FD, #1F7AD1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; border: 2px solid rgba(56,163,253,0.2); }
+        .logout-btn { background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 8px 20px; border-radius: 40px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.2); }
+
+        .sidebar { position: fixed; top: 114px; left: 20px; bottom: 20px; width: 280px; background: rgba(224, 247, 255, 0.75); backdrop-filter: blur(14px); border-radius: 24px; border: 1px solid rgba(0, 188, 212, 0.25); padding: 24px 12px; z-index: 20; }
+        .menu-item { padding: 14px 18px; margin: 6px 0; border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 500; color: #0F4A5B; transition: all 0.25s; }
+        .menu-item i { width: 22px; color: #00ACC1; }
+        .menu-item:hover { background: rgba(0, 188, 212, 0.12); color: #003845; }
+        .menu-item.active { background: linear-gradient(135deg, rgba(0, 188, 212, 0.18), rgba(0, 150, 180, 0.12)); color: #006064; border: 1px solid rgba(0, 188, 212, 0.4); }
+
+        .main-content { margin-left: 320px; margin-top: 114px; padding: 10px 30px 40px; position: relative; z-index: 10; }
+        .view-container { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px; }
+        .stat-card { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(8px); border-radius: 26px; padding: 24px 20px; border: 1px solid rgba(56, 163, 253, 0.2); transition: transform 0.2s, border-color 0.2s; }
+        .stat-card:hover { transform: translateY(-4px); border-color: #38A3FD; box-shadow: 0 6px 18px rgba(56,163,253,0.1); }
+        .stat-label { font-size: 15px; color: #4B5563; margin-bottom: 12px; font-weight: 500; }
+        .stat-value { font-size: 42px; font-weight: 800; background: linear-gradient(135deg, #1F7AD1, #38A3FD); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .section-title { font-size: 26px; font-weight: 700; color: #0F172A; }
+
+        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 48px; }
+        .internship-card { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(8px); border-radius: 28px; padding: 26px 22px; border: 1px solid rgba(56, 163, 253, 0.15); transition: all 0.25s; }
+        .internship-card:hover { transform: translateY(-6px); border-color: #38A3FD; box-shadow: 0 20px 30px -8px rgba(56,163,253,0.15); }
+        .company-logo { width: 52px; height: 52px; background: linear-gradient(135deg, #38A3FD, #1F7AD1); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; color: white; margin-bottom: 18px; }
+        .card-title { font-size: 20px; font-weight: 700; color: #0F172A; margin-bottom: 8px; }
+        .company-name { font-size: 14px; color: #4B5563; margin-bottom: 14px; }
+        .card-detail { font-size: 14px; color: #64748b; margin-bottom: 8px; }
+        .skills { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+        .skill-tag { padding: 5px 14px; background: rgba(56, 163, 253, 0.08); border-radius: 40px; font-size: 12px; color: #1F7AD1; border: 1px solid rgba(56,163,253,0.2); }
+        .apply-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #38A3FD, #1F7AD1); color: white; border: none; border-radius: 18px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 18px; transition: 0.2s; box-shadow: 0 6px 14px rgba(56,163,253,0.25); }
+        .apply-btn:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(31,122,209,0.4); }
+
+        .table-container { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(8px); border-radius: 28px; border: 1px solid rgba(56, 163, 253, 0.2); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 18px 22px; background: rgba(56, 163, 253, 0.05); font-size: 14px; font-weight: 600; color: #4B5563; border-bottom: 1px solid rgba(56,163,253,0.15); }
+        td { padding: 18px 22px; font-size: 15px; color: #0F172A; border-bottom: 1px solid rgba(56,163,253,0.08); }
+
+        .status-badge { display: inline-block; padding: 5px 16px; border-radius: 40px; font-size: 13px; font-weight: 600; }
+        .status-pending { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+        .status-accepted { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+        .status-rejected { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+        .status-interview { background: #EDE9FE; color: #5B21B6; border: 1px solid #C4B5FD; }
+        .status-active { background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+        .status-completed { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+
+        .view-btn, .action-btn { padding: 8px 20px; background: transparent; color: #1F7AD1; border: 1px solid rgba(56,163,253,0.5); border-radius: 40px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .view-btn:hover, .action-btn:hover { background: rgba(56,163,253,0.1); }
+
+        .settings-form { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(8px); border-radius: 28px; padding: 32px; border: 1px solid rgba(56, 163, 253, 0.2); max-width: 600px; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; color: #4B5563; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 14px 18px; background: rgba(248, 250, 252, 0.9); border: 1px solid rgba(56, 163, 253, 0.3); border-radius: 16px; color: #0F172A; font-size: 15px; transition: 0.2s; }
+        .form-group input:focus { outline: none; border-color: #38A3FD; box-shadow: 0 0 0 3px rgba(56,163,253,0.1); }
+        .save-btn { padding: 14px 32px; background: linear-gradient(135deg, #38A3FD, #1F7AD1); color: white; border: none; border-radius: 18px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .save-btn:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(31,122,209,0.4); }
+
+        .empty-state { text-align: center; padding: 60px; background: rgba(255, 255, 255, 0.65); border-radius: 28px; color: #64748b; }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+        .progress-container { margin: 20px 0; }
+        .progress-bar { height: 8px; background: rgba(56,163,253,0.1); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(135deg, #38A3FD, #1F7AD1); border-radius: 4px; }
+
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: transparent; color: #4B5563; border: 1px solid rgba(56,163,253,0.3); border-radius: 40px; cursor: pointer; margin-bottom: 24px; transition: 0.2s; }
+        .back-btn:hover { background: rgba(56, 163, 253, 0.05); color: #0F172A; }
+    </style>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="header">
+        <div class="logo" onclick="goHome()" title="Go to Home">
+            <div class="logo-icon"><i class="fas fa-briefcase"></i></div>
+            <span class="logo-text">Internship Platform</span>
+            <span class="logo-badge">Intern</span>
+        </div>
+        <div class="header-right">
+            <div class="notification-container">
+                <div class="notification-bell" onclick="toggleNotifications()">
+                    <i class="far fa-bell"></i>
+                    <span class="notification-badge" id="notificationCount">0</span>
+                </div>
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-header"><i class="far fa-bell mr-2" style="color:#38A3FD;"></i>Notifications</div>
+                    <div class="notification-list" id="notificationList"></div>
+                </div>
+            </div>
+            <div class="user-info">
+                <span class="user-name" id="userName">Ahmed Benali</span>
+                <div class="avatar" id="userAvatar">AB</div>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt mr-1"></i> Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="menu-item active" data-view="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</div>
+        <div class="menu-item" data-view="offers"><i class="fas fa-briefcase"></i> Available Offers</div>
+        <div class="menu-item" data-view="applications"><i class="fas fa-file-alt"></i> My Applications</div>
+        <div class="menu-item" data-view="internship"><i class="fas fa-building"></i> My Internship</div>
+        <div class="menu-item" data-view="notifications"><i class="fas fa-bell"></i> Notifications</div>
+        <div class="menu-item" data-view="settings"><i class="fas fa-cog"></i> Settings</div>
+    </div>
+
+    <div class="main-content" id="mainContent"></div>
+
+    <script>
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || { 
+            id: 'student1', name: 'Ahmed Benali', email: 'ahmed@univ-tebessa.dz', 
+            department: 'Computer Science', university: 'Université de Tébessa',
+            studentId: 'STU-2024-001', phone: '+213 555 123 456'
+        };
+
+        let internships = [
+            { id: 101, title: 'Frontend Developer Intern', company: 'Tech Solutions DZ', location: 'Remote', duration: '3 months', stipend: '15,000 DZD/mo', skills: 'React,Tailwind,JavaScript', status: 'active', description: 'Build modern web applications with React and Tailwind CSS.', postedDate: '2026-04-01', deadline: '2026-05-15' },
+            { id: 102, title: 'Data Science Intern', company: 'AI Analytics Pro', location: 'Hybrid (Algiers)', duration: '4 months', stipend: '20,000 DZD/mo', skills: 'Python,Machine Learning,Pandas,SQL', status: 'active', description: 'Work on real-world ML projects and data analysis.', postedDate: '2026-04-05', deadline: '2026-05-20' },
+            { id: 103, title: 'Digital Marketing Intern', company: 'Digital Innovators', location: 'Oran', duration: '2 months', stipend: '12,000 DZD/mo', skills: 'SEO,Content Marketing,Social Media', status: 'active', description: 'Help grow our online presence and manage campaigns.', postedDate: '2026-03-28', deadline: '2026-05-10' },
+            { id: 104, title: 'Backend Developer Intern', company: 'Cloud Systems DZ', location: 'Algiers', duration: '3 months', stipend: '18,000 DZD/mo', skills: 'Node.js,Express,MongoDB,PostgreSQL', status: 'active', description: 'Develop scalable backend APIs and microservices.', postedDate: '2026-04-10', deadline: '2026-05-25' },
+            { id: 105, title: 'UI/UX Design Intern', company: 'Creative Studio', location: 'Remote', duration: '3 months', stipend: '14,000 DZD/mo', skills: 'Figma,Adobe XD,User Research', status: 'active', description: 'Design beautiful and intuitive user interfaces.', postedDate: '2026-04-08', deadline: '2026-05-18' },
+            { id: 106, title: 'Mobile App Developer', company: 'AppWorks', location: 'Hybrid (Constantine)', duration: '4 months', stipend: '16,000 DZD/mo', skills: 'Flutter,Dart,Firebase', status: 'active', description: 'Build cross-platform mobile applications with Flutter.', postedDate: '2026-04-12', deadline: '2026-05-30' }
+        ];
+
+        let applications = [
+            { id: 5001, studentId: 'student1', internshipId: 101, internshipTitle: 'Frontend Developer Intern', company: 'Tech Solutions DZ', appliedDate: '2026-04-10', status: 'pending', lastUpdated: '2026-04-10' },
+            { id: 5002, studentId: 'student1', internshipId: 102, internshipTitle: 'Data Science Intern', company: 'AI Analytics Pro', appliedDate: '2026-04-12', status: 'interview', lastUpdated: '2026-04-15', interviewDate: '2026-04-25' },
+            { id: 5003, studentId: 'student1', internshipId: 103, internshipTitle: 'Digital Marketing Intern', company: 'Digital Innovators', appliedDate: '2026-04-08', status: 'accepted', lastUpdated: '2026-04-14', startDate: '2026-05-01' }
+        ];
+
+        let activeInternship = {
+            id: 5003, title: 'Digital Marketing Intern', company: 'Digital Innovators',
+            startDate: '2026-05-01', endDate: '2026-07-01', mentor: 'Sarah Mansouri',
+            progress: 0, tasks: [ /* tasks removed */ ]
+        };
+
+        let notifications = [
+            { id: 1001, title: 'Application Update', message: 'Your application for Data Science Intern moved to Interview stage', type: 'success', time: '2026-04-15 14:30', read: false },
+            { id: 1002, title: 'New Internship Match', message: 'Backend Developer role at Cloud Systems DZ matches your skills', type: 'info', time: '2026-04-14 09:15', read: true },
+            { id: 1003, title: 'Congratulations!', message: 'You have been accepted for Digital Marketing Intern at Digital Innovators', type: 'success', time: '2026-04-14 11:00', read: false },
+            { id: 1004, title: 'Reminder', message: 'Complete your profile to increase visibility to recruiters', type: 'warning', time: '2026-04-13 16:45', read: true },
+            { id: 1005, title: 'New Feature', message: 'You can now track your application status in real-time', type: 'info', time: '2026-04-12 10:20', read: false }
+        ];
+
+        const DataService = {
+            async getInternships() { return internships.filter(i => i.status === 'active'); },
+            async getAllInternships() { return internships; },
+            async getApplications() { return applications.filter(a => a.studentId === currentUser.id); },
+            async getActiveInternships() {
+                const acceptedApps = applications.filter(a => a.studentId === currentUser.id && a.status === 'accepted');
+                return acceptedApps.map(app => {
+                    const intern = internships.find(i => i.id === app.internshipId);
+                    return {
+                        ...app,
+                        details: intern,
+                        mentor: activeInternship.mentor || 'Not assigned',
+                        progress: activeInternship.progress || 0
+                    };
+                });
+            },
+            async getNotifications() { return notifications; },
+            async applyForInternship(internshipId) {
+                const internship = internships.find(i => i.id === internshipId);
+                if (!internship) throw 'Internship not found';
+                const exists = applications.find(a => a.studentId === currentUser.id && a.internshipId === internshipId);
+                if (exists) throw 'Already applied';
+                const newApp = {
+                    id: Date.now(), studentId: currentUser.id, internshipId: internshipId,
+                    internshipTitle: internship.title, company: internship.company,
+                    appliedDate: new Date().toISOString().slice(0,10), status: 'pending',
+                    lastUpdated: new Date().toISOString().slice(0,10)
+                };
+                applications.push(newApp);
+                notifications.unshift({
+                    id: Date.now(), title: 'Application Submitted',
+                    message: `You applied for ${internship.title} at ${internship.company}`,
+                    type: 'success', time: new Date().toLocaleString(), read: false
+                });
+                return newApp;
+            },
+            async withdrawApplication(appId) {
+                const idx = applications.findIndex(a => a.id === appId);
+                if (idx !== -1) {
+                    applications.splice(idx, 1);
+                    return true;
+                }
+                throw 'Application not found';
+            },
+            async markNotificationRead(id) { const n = notifications.find(no => no.id === id); if (n) n.read = true; },
+            async updateUserProfile(data) { Object.assign(currentUser, data); }
+        };
+
+        let currentView = 'dashboard';
+
+        function renderView(view) {
+            currentView = view;
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.toggle('active', item.dataset.view === view));
+            const container = document.getElementById('mainContent');
+            switch(view) {
+                case 'dashboard': renderDashboard(container); break;
+                case 'offers': renderOffersView(container); break;
+                case 'applications': renderApplicationsView(container); break;
+                case 'internship': renderInternshipView(container); break;
+                case 'notifications': renderNotificationsView(container); break;
+                case 'settings': renderSettingsView(container); break;
+            }
+        }
+
+        async function renderDashboard(container) {
+            const [internships, apps, activeList] = await Promise.all([
+                DataService.getInternships(), DataService.getApplications(), DataService.getActiveInternships()
+            ]);
+            const availableCount = internships.length;
+            const myAppsCount = apps.length;
+            const activeCount = activeList.length;
+            const completionRate = apps.length ? Math.floor((apps.filter(a => a.status === 'accepted').length / apps.length) * 100) : 0;
+
+            container.innerHTML = `
+            <div class="view-container">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label"><i class="fas fa-rocket mr-1" style="color:#38A3FD;"></i> Available Internships</div><div class="stat-value">${availableCount}</div></div>
+                    <div class="stat-card"><div class="stat-label"><i class="fas fa-paper-plane mr-1"></i> My Applications</div><div class="stat-value">${myAppsCount}</div></div>
+                    <div class="stat-card"><div class="stat-label"><i class="fas fa-play-circle mr-1"></i> Active Internship</div><div class="stat-value">${activeCount}</div></div>
+                    <div class="stat-card"><div class="stat-label"><i class="fas fa-check-circle mr-1"></i> Success Rate</div><div class="stat-value">${completionRate}%</div></div>
+                </div>
+                <div class="section-header"><div class="section-title"><i class="fas fa-bolt mr-2" style="color:#38A3FD;"></i>🔥 Recommended for you</div><button class="view-btn" onclick="renderView('offers')">View All <i class="fas fa-arrow-right ml-1"></i></button></div>
+                <div class="cards-grid">
+                    ${internships.slice(0,3).map(i => renderInternshipCard(i)).join('')}
+                </div>
+                <div class="section-header"><div class="section-title"><i class="fas fa-history mr-2"></i> Recent Applications</div><button class="view-btn" onclick="renderView('applications')">View All <i class="fas fa-arrow-right ml-1"></i></button></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Internship</th><th>Company</th><th>Applied</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${apps.slice(0,5).map(app => `
+                                <tr>
+                                    <td>${app.internshipTitle}</td><td>${app.company}</td><td>${app.appliedDate}</td>
+                                    <td><span class="status-badge status-${app.status}">${app.status.charAt(0).toUpperCase()+app.status.slice(1)}</span></td>
+                                </tr>
+                            `).join('')}
+                            ${apps.length===0?'<tr><td colspan="4" style="text-align:center;padding:40px;">No applications yet</td></tr>':''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        async function renderOffersView(container) {
+            const internships = await DataService.getInternships();
+            const myApps = await DataService.getApplications();
+            const appliedIds = myApps.map(a => a.internshipId);
+            container.innerHTML = `
+            <div class="view-container">
+                <button class="back-btn" onclick="renderView('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                <div class="section-header"><div class="section-title"><i class="fas fa-briefcase mr-2"></i> Available Internships</div><span style="color:#64748b;">${internships.length} opportunities</span></div>
+                <div class="cards-grid">${internships.map(i => {
+                    const hasApplied = appliedIds.includes(i.id);
+                    return `<div class="internship-card">
+                        <div class="company-logo">${i.company.charAt(0)}</div>
+                        <div class="card-title">${i.title}</div>
+                        <div class="company-name"><i class="fas fa-building mr-1"></i>${i.company}</div>
+                        <div class="card-detail"><i class="far fa-clock mr-1"></i>${i.duration}</div>
+                        <div class="card-detail"><i class="fas fa-map-pin mr-1"></i>${i.location} · ${i.stipend}</div>
+                        <div class="card-detail"><i class="far fa-calendar mr-1"></i>Deadline: ${i.deadline}</div>
+                        <div class="skills">${i.skills.split(',').map(s=>`<span class="skill-tag">${s.trim()}</span>`).join('')}</div>
+                        <p style="color:#64748b;font-size:13px;margin:12px 0;">${i.description}</p>
+                        ${hasApplied ? '<button class="apply-btn" style="background:#94a3b8;cursor:not-allowed;" disabled>Already Applied</button>' : `<button class="apply-btn" onclick="handleApply(${i.id})"><i class="fas fa-paper-plane mr-1"></i> Apply Now</button>`}
+                    </div>`;
+                }).join('')}</div>
+            </div>`;
+        }
+
+        async function renderApplicationsView(container) {
+            const apps = await DataService.getApplications();
+            container.innerHTML = `
+            <div class="view-container">
+                <button class="back-btn" onclick="renderView('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                <div class="section-header"><div class="section-title"><i class="fas fa-file-alt mr-2"></i> My Applications</div><span style="color:#64748b;">${apps.length} total</span></div>
+                <div class="table-container"><table><thead><tr><th>Internship Title</th><th>Company</th><th>Applied Date</th><th>Status</th><th>Last Updated</th><th>Action</th></tr></thead><tbody>
+                    ${apps.map(app => `<tr><td><strong>${app.internshipTitle}</strong></td><td>${app.company}</td><td>${app.appliedDate}</td><td><span class="status-badge status-${app.status}">${app.status.charAt(0).toUpperCase()+app.status.slice(1)}</span></td><td>${app.lastUpdated||app.appliedDate}</td><td><button class="view-btn" style="color:#ef4444;border-color:#ef4444;" onclick="handleWithdraw(${app.id})"><i class="fas fa-undo mr-1"></i>Undo</button></td></tr>`).join('')}
+                    ${apps.length===0?'<tr><td colspan="6" style="text-align:center;padding:60px;"><i class="fas fa-inbox"></i><br/>No applications yet</td></tr>':''}
+                </tbody></table></div>
+                ${apps.length>0?`<div style="margin-top:32px;"><div class="section-title" style="font-size:20px;margin-bottom:16px;">Application Summary</div><div class="stats-grid" style="grid-template-columns:repeat(4,1fr);"><div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="font-size:32px;">${apps.filter(a=>a.status==='pending').length}</div></div><div class="stat-card"><div class="stat-label">Interview</div><div class="stat-value" style="font-size:32px;">${apps.filter(a=>a.status==='interview').length}</div></div><div class="stat-card"><div class="stat-label">Accepted</div><div class="stat-value" style="font-size:32px;">${apps.filter(a=>a.status==='accepted').length}</div></div><div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value" style="font-size:32px;">${apps.filter(a=>a.status==='rejected').length}</div></div></div></div>`:''}
+            </div>`;
+        }
+
+        async function renderInternshipView(container) {
+            const activeList = await DataService.getActiveInternships();
+            if (!activeList.length) {
+                container.innerHTML = `<div class="view-container"><button class="back-btn" onclick="renderView('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button><div class="empty-state"><i class="fas fa-briefcase"></i><h3 style="color:#0F172A; margin-bottom:8px;">No Active Internship</h3><p style="color:#64748b;">You don't have an active internship yet. Apply to opportunities to get started!</p><button class="action-btn" style="margin-top:24px;" onclick="renderView('offers')">Browse Internships</button></div></div>`;
+                return;
+            }
+            
+            let cardsHtml = activeList.map(intern => {
+                const mentor = intern.mentor || 'Not assigned';
+                const progress = intern.progress || 0;
+                const company = intern.company;
+                const emailPrefix = company.replace(/\s/g, '').toLowerCase();
+                return `
+                <div class="internship-card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <div class="company-logo">${company.charAt(0)}</div>
+                        <div class="card-title">${intern.internshipTitle}</div>
+                        <div class="company-name"><i class="fas fa-building mr-1"></i>${company}</div>
+                        <div class="card-detail"><i class="far fa-calendar mr-1"></i>${intern.startDate || 'Start date N/A'} - ${activeInternship.endDate || 'End date N/A'}</div>
+                        <div class="card-detail"><i class="fas fa-user-tie mr-1"></i>Mentor: ${mentor}</div>
+                        <div class="progress-container">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <span style="color:#4B5563;">Overall Progress</span><span style="color:#38A3FD;">${progress}%</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%;"></div></div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(56,163,253,0.05); border-radius: 20px; padding: 20px;">
+                        <h4 style="color:#0F172A; margin-bottom:16px;"><i class="fas fa-address-book mr-2"></i>Contact</h4>
+                        <div class="card-detail"><i class="fas fa-user mr-2"></i>Mentor: ${mentor}</div>
+                        <div class="card-detail"><i class="fas fa-envelope mr-2"></i>mentor@${emailPrefix}.dz</div>
+                        <div class="card-detail"><i class="fas fa-building mr-2"></i>HR: hr@${emailPrefix}.dz</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            container.innerHTML = `
+            <div class="view-container">
+                <button class="back-btn" onclick="renderView('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                <div class="section-header"><div class="section-title"><i class="fas fa-building mr-2"></i> My Internship</div><span class="status-badge status-active">Active</span></div>
+                <div style="display:flex; flex-direction:column; gap:24px;">${cardsHtml}</div>
+            </div>`;
+        }
+
+        async function renderNotificationsView(container) {
+            const notifs = await DataService.getNotifications();
+            const unread = notifs.filter(n=>!n.read).length;
+            container.innerHTML = `
+            <div class="view-container">
+                <button class="back-btn" onclick="renderView('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                <div class="section-header"><div class="section-title"><i class="fas fa-bell mr-2"></i> Notifications</div><span style="color:#64748b;">${unread} unread</span></div>
+                <div style="max-width:700px;">
+                    ${notifs.map(n=>`<div class="notification-item ${!n.read?'unread':''}" style="border-radius:16px;margin-bottom:8px;background:rgba(255,255,255,0.7);" onclick="markNotificationRead(${n.id})"><div class="notification-icon">${n.type==='success'?'✅':n.type==='warning'?'⚠️':'📢'}</div><div class="notification-content"><div class="notification-title">${n.title}</div><div style="font-size:13px;color:#4B5563;">${n.message}</div><div class="notification-time">${n.time}</div></div>${!n.read?'<span style="color:#38A3FD;font-size:12px;">New</span>':''}</div>`).join('')}
+                    ${notifs.length===0?'<div class="empty-state"><i class="fas fa-bell-slash"></i><h3>No notifications</h3></div>':''}
+                </div>
+            </div>`;
+        }
+
+        async function renderSettingsView(container) {
+            container.innerHTML = `
+            <div class="view-container">
+                <button class="back-btn" onclick="renderView('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                <div class="section-header"><div class="section-title"><i class="fas fa-cog mr-2"></i> Settings</div></div>
+                <div class="settings-form">
+                    <h3 style="color:#0F172A;margin-bottom:24px;">Profile Information</h3>
+                    <div class="form-group"><label>Full Name</label><input type="text" id="settingsName" value="${currentUser.name}"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="settingsEmail" value="${currentUser.email}"></div>
+                    <div class="form-group"><label>University</label><input type="text" id="settingsUniversity" value="${currentUser.university}"></div>
+                    <div class="form-group"><label>Department</label><input type="text" id="settingsDepartment" value="${currentUser.department}"></div>
+                    <div class="form-group"><label>Phone</label><input type="tel" id="settingsPhone" value="${currentUser.phone||''}"></div>
+                    <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save mr-2"></i> Save Changes</button>
+                    <button class="view-btn" style="margin-left:12px;" onclick="renderView('dashboard')">Cancel</button>
+                </div>
+                <div class="settings-form" style="margin-top:24px;">
+                    <h3 style="color:#0F172A;margin-bottom:24px;">Preferences</h3>
+                    <div class="form-group"><label style="display:flex;align-items:center;gap:12px;"><input type="checkbox" checked style="width:20px;height:20px;accent-color:#38A3FD;"><span>Email notifications for application updates</span></label></div>
+                    <div class="form-group"><label style="display:flex;align-items:center;gap:12px;"><input type="checkbox" checked style="width:20px;height:20px;accent-color:#38A3FD;"><span>Weekly internship recommendations</span></label></div>
+                    <button class="save-btn"><i class="fas fa-save mr-2"></i> Save Preferences</button>
+                </div>
+            </div>`;
+        }
+
+        function renderInternshipCard(internship) {
+            return `<div class="internship-card">
+                <div class="company-logo">${internship.company.charAt(0)}</div>
+                <div class="card-title">${internship.title}</div>
+                <div class="company-name"><i class="fas fa-building mr-1"></i>${internship.company}</div>
+                <div class="card-detail"><i class="far fa-clock mr-1"></i>${internship.duration}</div>
+                <div class="card-detail"><i class="fas fa-map-pin mr-1"></i>${internship.location} · ${internship.stipend}</div>
+                <div class="skills">${internship.skills.split(',').map(s=>`<span class="skill-tag">${s.trim()}</span>`).join('')}</div>
+                <button class="apply-btn" onclick="handleApply(${internship.id})"><i class="fas fa-paper-plane mr-1"></i> Apply Now</button>
+            </div>`;
+        }
+
+        window.renderView = renderView;
+        window.handleApply = async function(id) {
+            try { await DataService.applyForInternship(id); alert('Application submitted!'); updateNotificationBadge(); renderView(currentView); } catch(e) { alert(e); }
+        };
+        window.handleWithdraw = async function(appId) {
+            if (confirm('Withdraw this application?')) {
+                try { await DataService.withdrawApplication(appId); alert('Application withdrawn.'); renderView('applications'); } catch(e) { alert(e); }
+            }
+        };
+        window.markNotificationRead = async function(id) { await DataService.markNotificationRead(id); updateNotificationBadge(); renderView(currentView); };
+        window.saveSettings = async function() {
+            const data = {
+                name: document.getElementById('settingsName')?.value || currentUser.name,
+                email: document.getElementById('settingsEmail')?.value || currentUser.email,
+                university: document.getElementById('settingsUniversity')?.value || currentUser.university,
+                department: document.getElementById('settingsDepartment')?.value || currentUser.department,
+                phone: document.getElementById('settingsPhone')?.value || currentUser.phone
+            };
+            await DataService.updateUserProfile(data);
+            document.getElementById('userName').textContent = data.name;
+            document.getElementById('userAvatar').textContent = data.name.split(' ').map(w=>w[0]).join('').toUpperCase();
+            alert('Settings saved!');
+        };
+        window.toggleNotifications = function() {
+            document.getElementById('notificationDropdown').classList.toggle('show');
+            renderNotificationDropdown();
+        };
+        function renderNotificationDropdown() {
+            const list = document.getElementById('notificationList');
+            const unread = notifications.filter(n=>!n.read).slice(0,5);
+            if (!unread.length) { list.innerHTML='<div style="padding:24px;text-align:center;color:#64748b;">No new notifications</div>'; return; }
+            list.innerHTML = unread.map(n=>`<div class="notification-item unread" onclick="markNotificationRead(${n.id}); toggleNotifications();"><div class="notification-icon">${n.type==='success'?'✅':n.type==='warning'?'⚠️':'📢'}</div><div class="notification-content"><div class="notification-title">${n.title}</div><div style="font-size:12px;color:#4B5563;">${n.message}</div><div class="notification-time">${n.time}</div></div></div>`).join('');
+        }
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationCount');
+            const unread = notifications.filter(n=>!n.read).length;
+            badge.textContent = unread;
+            badge.style.display = unread>0?'flex':'none';
+        }
+        window.logout = function() { if (confirm('Are you sure you want to logout?')) window.location.href='homepage.html'; };
+
+        function initUser() {
+            const saved = JSON.parse(localStorage.getItem('currentUser'));
+            if (saved && saved.role === 'student') {
+                currentUser = saved;
+                let students = JSON.parse(localStorage.getItem('registeredStudents')) || [];
+                let fullData = students.find(s => s.id === currentUser.id);
+                if (fullData) {
+                    currentUser.department = fullData.specialization || currentUser.department;
+                    currentUser.phone = fullData.phone || currentUser.phone;
+                }
+            }
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase();
+        }
+
+        document.addEventListener('click', e => {
+            const container = document.querySelector('.notification-container');
+            const dropdown = document.getElementById('notificationDropdown');
+            if (container && !container.contains(e.target) && dropdown.classList.contains('show')) dropdown.classList.remove('show');
+        });
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => { const view = item.dataset.view; if (view) renderView(view); });
+        });
+        function goHome() { window.location.href='homepage.html'; }
+        window.goHome = goHome;
+
+        initUser();
+        updateNotificationBadge();
+        renderView('dashboard');
+    </script>
+</body>
+</html>
